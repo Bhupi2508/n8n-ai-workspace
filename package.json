@@ -1,0 +1,19 @@
+{
+  "name": "n8n",
+  "version": "1.0.0",
+  "description": "A local automation and AI workflow hub powered by n8n",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bhupi2508/n8n-ai-workspace.git"
+  },
+  "author": "Bhupendra Singh",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Bhupi2508/n8n-ai-workspace/issues"
+  },
+  "homepage": "https://github.com/Bhupi2508/n8n-ai-workspace#readme"
+}
