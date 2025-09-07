@@ -34,3 +34,11 @@ docker compose logs -f
 # fix permissions (Linux) if you get permission errors for ./n8n_data
 
 sudo chown -R $(id -u):$(id -g) ./n8n_data
+
+# UI
+
+![alt text](image.png)
+
+# n8n Workflow
+
+![alt text](<Screenshot 2025-09-07 at 9.35.10 PM.png>)
