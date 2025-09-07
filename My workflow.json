@@ -1,0 +1,373 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prompt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -624,
+        -80
+      ],
+      "id": "2a02fbcd-7c6b-4674-a829-a96ed47e1029",
+      "name": "Webhook",
+      "webhookId": "e57679c0-682b-4f5a-a686-9c88fc9d3ffc"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        -80
+      ],
+      "id": "02a0f375-86c9-4321-ad11-e31ca8323df1",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "meta-llama/llama-4-maverick:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        112
+      ],
+      "id": "216ce9ce-d69d-49ce-aae2-11c1477cac36",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "eBojazSkqTF6kaha",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -80
+      ],
+      "id": "1772351e-32f5-4ef1-9986-087d6048331c",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:3000/getResponse",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "text",
+              "value": "={{$json[\"text\"]}}"
+            },
+            {
+              "name": "image",
+              "value": "https://m.media-amazon.com/images/G/01/poppin/DestinationPage/amazon-live-default.jpg"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        -80
+      ],
+      "id": "f67c0da3-400b-40c0-863a-caf4df8af64e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fullText = typeof $json[\"output\"] === \"string\" ? $json[\"output\"] : \"\";\n\n// If empty, provide fallback\nif (!fullText.trim()) {\n    return [{\n        chatInput: \"Generate a photorealistic image: [No content provided]\",\n        generatedData: \"\",\n    }];\n}\n\n// Simple sanitization (replace obvious bad words)\nconst badWords = [\"badword1\", \"badword2\"]; // extend as needed\nlet sanitized = fullText;\nbadWords.forEach(word => {\n    const regex = new RegExp(word, \"gi\");\n    sanitized = sanitized.replace(regex, \"***\");\n});\n\n// Extract first 1–3 sentences or limit words for short prompt\nconst sentences = sanitized.split(/(?<=[.!?])\\s+/);\nlet shortPrompt = sentences.slice(0, 3).join(\" \");\n// Optional: limit to ~40 words\nshortPrompt = shortPrompt.split(\" \").slice(0, 40).join(\" \");\n\n// Final prompt for image generation\nconst chatInput = `Generate a photorealistic image in PNG/JPG format: \"${shortPrompt}\"`;\n\n// Return both prompt for image AI and full sanitized data for UI\nreturn [{\n    chatInput: chatInput,       // For image AI\n    generatedData: sanitized,   // For UI reference            \n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -80
+      ],
+      "id": "e3854ac6-32bf-46de-bfbc-d9a17a9630cc",
+      "name": "sanitise data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const generatedData = $json[\"generatedData\"]; // from Code1\nconst imageURL = \"https://m.media-amazon.com/images/G/01/poppin/DestinationPage/amazon-live-default.jpg\" \n  // || $json[\"image\"]; // from AI\n\nreturn [{\n    text: generatedData,\n    image: imageURL,\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -80
+      ],
+      "id": "bc18031e-7081-490c-8ef9-1e0b60e5f29e",
+      "name": "final sanitise data to UI"
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-r1:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        128,
+        112
+      ],
+      "id": "de95da8b-eac3-4ec4-aa17-8e023e496f5e",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "eBojazSkqTF6kaha",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "15e290d1-bb51-40d2-b690-6195a4dcb179",
+              "name": "chatInput",
+              "value": "={{ $node[\"sanitise data\"].json[\"chatInput\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "3baca636-02cf-45a3-a516-14ee8d65f6c8",
+              "name": "generatedData",
+              "value": "={{ $node[\"sanitise data\"].json[\"generatedData\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5b2897a5-7ebb-4e15-a3b9-0ed0dad9a993",
+              "name": "image",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "05b090af-fd14-4fa2-99e0-2b0bb39583bb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Incoming JSON: { body: { chatInput: \"...\" } }\nconst input = $json.body?.chatInput || \"What are the futuristic technologies in IT in terms of growth and salary?\";\n\n// Domain detection (keyword-based, can be extended)\nlet domainInstruction = \"\";\n\nif (/bank|account|loan|credit|debit/i.test(input)) {\n  domainInstruction = `\nYou are a banking assistant. Provide a truthful and concise response.\nReturn the data strictly in a table with columns: \"Issue\", \"Suggested Solution\", \"Notes\".\nInclude common FAQs and any moral/ethical warnings if applicable.\nAvoid making up information.`;\n} else if (/social|facebook|twitter|instagram/i.test(input)) {\n  domainInstruction = `\nYou are a social media support assistant. Respond accurately.\nReturn data in a table with columns: \"Platform\", \"Issue\", \"Recommended Action\", \"Notes\".\nInclude common social platform questions and do not hallucinate.`;\n} else if (/e[- ]?commerce|order|product/i.test(input)) {\n  domainInstruction = `\nYou are an e-commerce assistant. Provide structured, truthful answers.\nReturn in a table with columns: \"Product\", \"Issue\", \"Suggested Action\", \"Priority\".\nInclude common customer questions and avoid fabricating info.`;\n} else if (/education|school|university/i.test(input)) {\n  domainInstruction = `\nYou are an educational assistant. Provide concise and accurate responses.\nReturn in a table: \"Topic\", \"Question\", \"Suggested Answer\", \"Resources\".\nInclude common student queries; avoid false info.`;\n} else if (/internal|IT|HR/i.test(input)) {\n  domainInstruction = `\nYou are an internal support assistant. Provide truthful solutions.\nReturn in a table: \"Department\", \"Query\", \"Suggested Resolution\", \"Urgency\".\nInclude common internal FAQs; do not hallucinate.`;\n} else {\n  // default\n  domainInstruction = `\nYou are a general assistant. Answer concisely and truthfully.\nReturn results in a table: \"Query\", \"Suggested Action\", \"Notes\".\nInclude commonly asked questions; do not make up answers.`;\n}\n\n// Combine user input with domain-specific instruction\nconst finalPrompt = `\nUser query: \"${input}\"\n\nInstruction: ${domainInstruction}\n\nFormat your response strictly in a table or list that can be rendered easily on a UI.\nBe truthful, concise, and clear.\nAvoid any hallucination or speculation.\nIf unsure, indicate clearly instead of fabricating.\n`;\n\n// Return as JSON for AI input\nreturn [{ chatInput: finalPrompt }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -80
+      ],
+      "id": "4adb2a59-3291-425c-8d6e-49fb4668c77d",
+      "name": "Sanitise Prompt"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        112
+      ],
+      "id": "588d8eb9-d49d-4cf4-bf1a-0454738b30d3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/testPrompt",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chatInput",
+              "value": "What are the futuristic technologies in IT in terms of growth and salary?"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -624,
+        -304
+      ],
+      "id": "aae2984d-57c4-4a65-acf3-86fbb9569109",
+      "name": "Call it on behalf of the backend"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Sanitise Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "sanitise data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sanitise data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "final sanitise data to UI": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "final sanitise data to UI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Sanitise Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call it on behalf of the backend": {
+      "main": [
+        [
+          {
+            "node": "Sanitise Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Sanitise Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2b30e63f-7f23-4f8a-971a-a708d087fd93",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "57a05081e58c89c388285c68b48f00918b86e1fedb6ea8baa844dcc61359521e"
+  },
+  "id": "WAgpFWBc2sbgQT1F",
+  "tags": []
+}
