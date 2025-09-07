@@ -4,7 +4,8 @@
   "description": "A local automation and AI workflow hub powered by n8n",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test"
+    "test": "npm run test",
+    "start": "nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,12 @@
   "bugs": {
     "url": "https://github.com/Bhupi2508/n8n-ai-workspace/issues"
   },
-  "homepage": "https://github.com/Bhupi2508/n8n-ai-workspace#readme"
+  "homepage": "https://github.com/Bhupi2508/n8n-ai-workspace#readme",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "g": "^2.0.1",
+    "nodemon": "^3.1.10"
+  }
 }
